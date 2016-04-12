@@ -15,4 +15,55 @@ CHIP Mux16 {
 
     PARTS:
     // Put your code here:
+    Not(in=sel, out=nsel);
+    And(a=a[0], b=nsel, out=aout0);
+    And(a=a[1], b=nsel, out=aout1);
+    And(a=a[2], b=nsel, out=aout2);
+    And(a=a[3], b=nsel, out=aout3);
+    And(a=a[4], b=nsel, out=aout4);
+    And(a=a[5], b=nsel, out=aout5);
+    And(a=a[6], b=nsel, out=aout6);
+    And(a=a[7], b=nsel, out=aout7);
+    And(a=a[8], b=nsel, out=aout8);
+    And(a=a[9], b=nsel, out=aout9);
+    And(a=a[10], b=nsel, out=aout10);
+    And(a=a[11], b=nsel, out=aout11);
+    And(a=a[12], b=nsel, out=aout12);
+    And(a=a[13], b=nsel, out=aout13);
+    And(a=a[14], b=nsel, out=aout14);
+    And(a=a[15], b=nsel, out=aout15);
+    
+    And(a=b[0], b=sel, out=bout0);
+    And(a=b[1], b=sel, out=bout1);
+    And(a=b[2], b=sel, out=bout2);
+    And(a=b[3], b=sel, out=bout3);
+    And(a=b[4], b=sel, out=bout4);
+    And(a=b[5], b=sel, out=bout5);
+    And(a=b[6], b=sel, out=bout6);
+    And(a=b[7], b=sel, out=bout7);
+    And(a=b[8], b=sel, out=bout8);
+    And(a=b[9], b=sel, out=bout9);
+    And(a=b[10], b=sel, out=bout10);
+    And(a=b[11], b=sel, out=bout11);
+    And(a=b[12], b=sel, out=bout12);
+    And(a=b[13], b=sel, out=bout13);
+    And(a=b[14], b=sel, out=bout14);
+    And(a=b[15], b=sel, out=bout15);
+
+    Or(a=aout0, b=bout0, out=out[0]);
+    Or(a=aout1, b=bout1, out=out[1]);
+    Or(a=aout2, b=bout2, out=out[2]);
+    Or(a=aout3, b=bout3, out=out[3]);
+    Or(a=aout4, b=bout4, out=out[4]);
+    Or(a=aout5, b=bout5, out=out[5]);
+    Or(a=aout6, b=bout6, out=out[6]);
+    Or(a=aout7, b=bout7, out=out[7]);
+    Or(a=aout8, b=bout8, out=out[8]);
+    Or(a=aout9, b=bout9, out=out[9]);
+    Or(a=aout10, b=bout10, out=out[10]);
+    Or(a=aout11, b=bout11, out=out[11]);
+    Or(a=aout12, b=bout12, out=out[12]);
+    Or(a=aout13, b=bout13, out=out[13]);
+    Or(a=aout14, b=bout14, out=out[14]);
+    Or(a=aout15, b=bout15, out=out[15]);
 }
