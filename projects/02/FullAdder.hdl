@@ -14,4 +14,7 @@ CHIP FullAdder {
 
     PARTS:
     // Put you code here:
+    HalfAdder(a=b, b=c, carry=carry1, sum=sum1);
+    HalfAdder(a=a, b=sum1, carry=carry2, sum=sum);
+    Xor(a=carry1, b=carry2, out=carry);
 }
