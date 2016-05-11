@@ -13,61 +13,44 @@
 (KEY_POLLING)
 	@KBD
 	D=M
-	@FILL
-	D,JNE
-	@UNFILL
+	@R2
+	M=0
+	@DRAW
+	D,JEQ
+	@R2
+	M=-1
+	@DRAW
 	0,JMP
 	@KEY_POLLING
 	0,JMP
 
-(FILL)
+(DRAW)
 	@SCREEN
 	D=A
 	@8191
 	D=D+A
 	@R0
 	M=D
-(FILL_LOOP)
+(DRAW_LOOP)
 	@R0
 	D=M		// Dにカウンタ値をロード
 	@SCREEN
 	D=D-A		// D = カウンタ値 - @SCREEN(16384)
-	@FILL_END
+	@DRAW_END
 	D,JLT		// D < 0 ならループを抜ける
-	@R0
-	A=M
-	M=-1		// カウンタ値のアドレスを黒く塗る
-	AD=A-1		// カウンタ--
-	@R0
-	M=D
-	@FILL_LOOP
-	0,JMP
-(FILL_END)
-	@KEY_POLLING
-	0,JMP
+	
+	@R2		// ピクセルに書きこむデータをR2から読み込む
+	D=M
 
-(UNFILL)
-	@SCREEN
-	D=A
-	@8191
-	D=D+A
-	@R0
-	M=D
-(UNFILL_LOOP)
-	@R0
-	D=M		// Dにカウンタ値をロード
-	@SCREEN
-	D=D-A		// D = カウンタ値 - @SCREEN(16384)
-	@UNFILL_END
-	D,JLT		// D < 0 ならループを抜ける
 	@R0
 	A=M
-	M=0		// カウンタ値のアドレスを白く塗る
+	//M=-1		// カウンタ値のアドレスを黒く塗る
+	M=D
 	AD=A-1		// カウンタ--
 	@R0
 	M=D
-	@UNFILL_LOOP
+	@DRAW_LOOP
 	0,JMP
-(UNFILL_END)
+(DRAW_END)
 	@KEY_POLLING
 	0,JMP
