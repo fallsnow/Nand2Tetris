@@ -6,17 +6,6 @@ module CommandType
     L_COMMAND = 3
 end
 
-module DestinationType
-    NULL    = 0
-    M       = 1
-    D       = 2
-    MD      = 3
-    A       = 4
-    AM      = 5
-    AD      = 6
-    AMD     = 7
-end
-    
 class Parser
     def initialize(file)
         @asmfile = file
@@ -35,13 +24,12 @@ class Parser
     end
     
     def commandType
-        puts @command
         # 空白をすべて取り除く
         @command.gsub!(/\s*/,"")
         
         case @command
         when /^\/\//
-            puts "Comment Line"
+            # コメント行
         when /^@(.*)/
              @symbol = $1
             CommandType::A_COMMAND
@@ -49,15 +37,11 @@ class Parser
              @symbol = $1
             CommandType::L_COMMAND
         when /^(.+)=(.+)/
-            puts "command: #{@command}"
-            puts "dest: #{$1}, #{$2}"
             @computation = $2
             @destination = $1
             @jump = nil
             CommandType::C_COMMAND
         when /^(\w);(JGT|JEQ|JGE|JLT|JNE|JLE|JMP)/
-            puts "command: #{@command}"
-            puts "jump: #{$1}, #{$2}"
             @computation = $1
             @destination = nil
             @jump = $2
@@ -65,8 +49,6 @@ class Parser
         else
             # 空白行、またはフォーマットエラー
         end
-        #return CommandType::A_COMMAND if @command[0] == "@"
-        #puts @command
     end
     
     def symbol
@@ -83,6 +65,10 @@ class Parser
     
     def jump
         @jump
+    end
+    
+    def rewind
+        @io.rewind
     end
 end
 
@@ -159,6 +145,51 @@ class Code
     end
 end
 
+class SymbolTable
+    def initialize
+        @symbols = Hash.new
+        @symbols.store("SP", 0)
+        @symbols.store("LCL", 1)
+        @symbols.store("ARG", 2)
+        @symbols.store("THIS", 3)
+        @symbols.store("THAT", 4)
+        @symbols.store("R0",  0)
+        @symbols.store("R1",  1)
+        @symbols.store("R2",  2)
+        @symbols.store("R3",  3)
+        @symbols.store("R4",  4)
+        @symbols.store("R5",  5)
+        @symbols.store("R6",  6)
+        @symbols.store("R7",  7)
+        @symbols.store("R8",  8)
+        @symbols.store("R9",  9)
+        @symbols.store("R10", 10)
+        @symbols.store("R11", 11) 
+        @symbols.store("R12", 12)
+        @symbols.store("R13", 13)
+        @symbols.store("R14", 14)
+        @symbols.store("R15", 15)
+        @symbols.store("SCREEN", 16384)
+        @symbols.store("KBD", 24576)
+    end
+    
+    def addEntry(symbol, address)
+        @symbols.store(symbol, address)
+    end
+    
+    def contains?(symbol)
+        @symbols.has_key?(symbol)
+    end
+    
+    def getAddess(symbol)
+        @symbols[symbol]
+    end
+    
+    def show
+        p @symbols
+    end
+end
+
 # Main starts from here
 
 if ARGV.size < 1 then
@@ -166,23 +197,51 @@ if ARGV.size < 1 then
     exit
 end
 
-parser = Parser.new(ARGF.filename)
-code = Code.new
-
 filename = File.basename(ARGF.filename, "asm")
-puts filename += "hack"
+filename += "hack"
 f = File.open(filename, "w")
 
+parser = Parser.new(ARGF.filename)
+code = Code.new
+symbol_table = SymbolTable.new
+
+# シンボルテーブルの作成
+address = 0
 while parser.hasMoreCommands?
     parser.advance()
     case parser.commandType()
-    when CommandType::A_COMMAND, CommandType::L_COMMAND
-        f.printf("0%015b\n", parser.symbol().to_i)
+    when CommandType::A_COMMAND, CommandType::C_COMMAND
+        address += 1
+    when CommandType::L_COMMAND
+        symbol_table.addEntry(parser.symbol(), address)
+    end
+end
+parser.rewind()
+
+# アセンブルの実行
+ram_address = 16
+while parser.hasMoreCommands?
+    parser.advance()
+    case parser.commandType()
+    when CommandType::A_COMMAND
+        symbol = parser.symbol()
+        if symbol =~ /^[0-9]+$/
+            address = symbol.to_i
+        elsif symbol_table.contains?(symbol)
+            address = symbol_table.getAddess(symbol)
+        else
+            address = ram_address
+            symbol_table.addEntry(symbol, address)
+            ram_address += 1
+        end
+        f.printf("0%015b\n", address)
     when CommandType::C_COMMAND
         comp = code.comp(parser.comp())
         dest = code.dest(parser.dest())
         jump = code.jump(parser.jump())
         f.write("111" + comp + dest + jump + "\n")
+    when CommandType::L_COMMAND
+        # 何もしない
     end
 end
 f.close()    
