@@ -31,7 +31,7 @@ class Parser
             @arg1 = $1
             @arg2 = $2
             CommandType::C_PUSH
-        when /^pop\s(.*)\s(.*)/
+        when /^pop\s(\w+)\s(\d+)/
             @arg1 = $1
             @arg2 = $2
             CommandType::C_POP
