@@ -24,6 +24,7 @@ class Translator
         @coder.writeInit
         
         vmfiles.each {|vmfile|
+            @coder.setFileName(vmfile)
             @parser = Parser.new(vmfile)
             while @parser.hasMoreCommands?
                 @parser.advance

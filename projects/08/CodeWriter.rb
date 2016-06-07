@@ -2,7 +2,6 @@ class CodeWriter
     def initialize(source)
         puts "initialize #{source}"
         @io = File.open(source, "w")
-        @filename = File.basename(source, ".vm")
         @neqcount = 0
         @eqcount = 0
         @gtcount = 0
@@ -11,7 +10,7 @@ class CodeWriter
     end
     
     def setFileName(filename)
-    
+        @filename = File.basename(filename, ".vm")
     end
     
     def writeInit

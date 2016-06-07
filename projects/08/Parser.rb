@@ -31,11 +31,10 @@ class Parser
             @arg1 = $1
             @arg2 = $2
             CommandType::C_PUSH
-        when /^pop\s(\w+)\s(\d+)/
+        when /^pop\s(\w+)\s(\d+)(\s.*)*/
             @arg1 = $1
             @arg2 = $2
             CommandType::C_POP
-        #when /^?!.(add|sub|neg|eq|gt|lt|and|or|not|push|pop|if-goto|go|function|call|return)$/
         when /^label\s((\w|_|\.|:)(\w|\d|_|\.|:)*)/
             @arg1 = $1
             @arg2 = nil
