@@ -1,15 +1,28 @@
 class CodeWriter
     def initialize(source)
-        @io = File.open(source.sub(/.vm/, ".asm"), "w")
+        puts "initialize #{source}"
+        @io = File.open(source, "w")
         @filename = File.basename(source, ".vm")
         @neqcount = 0
         @eqcount = 0
         @gtcount = 0
         @ltcount = 0
+        @callcount = 0
     end
     
-    def setFileName
+    def setFileName(filename)
     
+    end
+    
+    def writeInit
+        @io.printf <<-"EOS".gsub(/^\s+/, '')
+            @256
+            D=A
+            @SP
+            M=D
+            @Sys.init
+            0;JMP
+        EOS
     end
         
     def writeArithmetic(command)
@@ -23,7 +36,6 @@ class CodeWriter
                 A=A-1
                 M=D+M
                 D=A+1
-                D=A+1
                 @SP
                 M=D
             EOS
@@ -36,7 +48,6 @@ class CodeWriter
                 D=M
                 A=A-1
                 M=M-D
-                D=A+1
                 D=A+1
                 @SP
                 M=D
@@ -406,6 +417,76 @@ class CodeWriter
     def writeReturn
         @io.printf <<-"EOS".gsub(/^\s+/, '')
             // return
+            // FRAME(R13) = LCL
+            @LCL
+            D=M
+            @R13
+            M=D
+            
+            // RET(R14) = *(FRAME - 5)
+            @5
+            A=D-A
+            D=M
+            @R14
+            M=D
+            
+            // *ARG = pop()
+            @SP
+            A=M-1
+            D=M
+            @ARG
+            A=M
+            M=D
+            
+            // SP = ARG + 1
+            D=A+1
+            @SP
+            M=D
+            
+            // THAT = *(FRAME - 1)
+            @R13
+            AM=M-1
+            D=M
+            @THAT
+            M=D
+            
+            // THIS = *(FRAME - 2)
+            @R13
+            AM=M-1
+            D=M
+            @THIS
+            M=D
+                        
+            // ARG = *(FRAME - 3)
+            @R13
+            AM=M-1
+            D=M
+            @ARG
+            M=D
+            
+            // LCL = *(FRAME - 4)
+            @R13
+            AM=M-1
+            D=M
+            @LCL
+            M=D
+            
+            // goto RET
+            @R14
+            A=M
+            0;JMP
+        EOS
+=begin
+        @io.printf <<-"EOS".gsub(/^\s+/, '')
+            // return
+            // RET = *(LCL - 5)
+            @LCL
+            D=M
+            @5
+            D=D-A
+            @R13
+            M=D
+            
             // 戻り値の設定
             @SP
             A=M-1
@@ -422,28 +503,117 @@ class CodeWriter
             @6
             AD=D+A
             
-            @R13
+            @R14
             AM=D
             D=M
             @THAT
             M=D
             
-            @R13
+            @R14
             AM=M-1
             D=M
             @THIS
             M=D
-            @R13
+            @R14
             AM=M-1
             D=M
             @ARG
             M=D
-            @R13
+            @R14
             AM=M-1
             D=M
             @LCL
             M=D
+            
+            @R13
+            A=M
+            0;JMP
         EOS
+=end
+    end
+    
+    def writeFunction(name, lclnum)
+        @io.printf("// function #{name} #{lclnum}\n")
+        @io.printf("(#{name})\n")
+        lclnum.to_i.times do
+            @io.printf <<-"EOS".gsub(/^\s+/, '')
+                @SP
+                A=M
+                M=0
+                @SP
+                M=M+1
+            EOS
+        end
+    end
+    
+    def writeCall(name, argnum)
+        @io.printf <<-"EOS".gsub(/^\s+/, '')
+            // call #{name} #{argnum}
+            
+            // リターンアドレス
+            @RETURN_ADDRESS_CALL#{@callcount}
+            D=A
+            @SP
+            A=M
+            M=D
+            @SP
+            AM=M+1
+            
+            // LCL
+            @LCL
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            AM=M+1
+            
+            // ARG
+            @ARG
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            AM=M+1
+            
+            // THIS
+            @THIS
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            AM=M+1
+            
+            // THAT
+            @THAT
+            D=M
+            @SP
+            A=M
+            M=D
+            @SP
+            AM=M+1
+            
+            // LCL = SP
+            // ARG = SP-n-5
+            @SP
+            D=M
+            @LCL
+            M=D
+            @#{argnum.to_i + 5}
+            D=D-A
+            @ARG
+            M=D
+           
+            // 関数呼び出し
+            @#{name}
+            0;JMP
+             
+            // リターンアドレスのためのラベルを宣言
+            (RETURN_ADDRESS_CALL#{@callcount})
+        EOS
+        @callcount += 1
     end
     
     def close

@@ -5,9 +5,7 @@ if ARGV.size < 1 then
     exit
 end
 
-puts source = ARGV[0] #File.basename(ARGF.filename, ".vm")
-#filename += "hack"
-#f = File.open(filename, "w")
+source = ARGV[0] #File.basename(ARGF.filename, ".vm")
 
 translator = Translator.new(source)
 translator.exec

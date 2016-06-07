@@ -19,11 +19,11 @@ class Parser
     end
     
     def commandType
-        puts @command
+        puts "command: #{@command}"
         case @command
         when /^\/\//
             # コメント行
-        when /^(add|sub|neg|eq|gt|lt|and|or|not)$/
+        when /^(add|sub|neg|eq|gt|lt|and|or|not)(\s.*)*$/
             @arg1 = $1
             @arg2 = nil
             CommandType::C_ARITHMETIC
@@ -52,8 +52,17 @@ class Parser
             @arg1 = nil
             @arg2 = nil
             CommandType::C_RETURN
+        when /^function\s+((\w|_|\.|:)(\w|\d|_|\.|:)*)\s(\d+)/
+            @arg1 = $1
+            @arg2 = $4
+            CommandType::C_FUNCTION
+        when /^call\s((\w|_|\.|:)(\w|\d|_|\.|:)*)\s(\d+)/
+            @arg1 = $1
+            @arg2 = $4 
+            CommandType::C_CALL
         else
             # フォーマットエラー?
+            puts "no hit"
         end
     end
 end
