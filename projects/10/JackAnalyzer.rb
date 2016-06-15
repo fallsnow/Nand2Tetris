@@ -1,6 +1,7 @@
 require 'cgi'
 require_relative 'Types'
 require_relative 'JackTokenizer'
+require_relative 'CompilationEngine'
 
 class JackAnalyzer
     def initialize(source)
@@ -21,11 +22,13 @@ class JackAnalyzer
         
         
         jackfiles.each{|jackfile|
-            #p xmlfile = File.basename(jackfile, ".jack") + "T.xml"
             xmlfile = jackfile.sub(/\.jack$/, "T.xml")
-            io = File.open(xmlfile, "w")
-            io.printf("<tokens>\n")
+            #io = File.open(xmlfile, "w")
+            #io.printf("<tokens>\n")
             
+            engine = CompilationEngine.new(xmlfile)
+            engine.compileClass
+=begin            
             tokenizer = JackTokenizer.new(jackfile)
             while tokenizer.has_more_tokens?
                 tokenizer.advance
@@ -45,6 +48,7 @@ class JackAnalyzer
             
             io.printf("</tokens>\n")
             io.close
+=end
         }
     end
 end
