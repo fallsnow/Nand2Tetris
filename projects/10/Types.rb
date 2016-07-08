@@ -29,3 +29,7 @@ module KeyWord
     NULL            = 20
     THIS            = 21
 end
+
+TokenTypes = {
+    :KEYWORD => 1
+}

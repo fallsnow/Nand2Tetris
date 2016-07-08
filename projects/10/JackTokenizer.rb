@@ -57,6 +57,12 @@ class JackTokenizer
         @current_token
     end
     
+    def peek
+        @tokens[0]
+    end
+    def show
+        @tokens
+    end
     private
     
     def tokenize(jackfile)
@@ -72,6 +78,6 @@ class JackTokenizer
             re = Regexp.new(Regexp.escape(s))
             file.gsub!(re, " #{s} ")
         end
-        @tokens = file.split(/(".*"|\s)/).select{|s| s =~ /[^\t\n\s]/}
+        p @tokens = file.split(/(".*"|\s)/).select{|s| s =~ /[^\t\n\s]/}
     end
 end

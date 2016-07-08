@@ -22,12 +22,13 @@ class JackAnalyzer
         
         
         jackfiles.each{|jackfile|
-            xmlfile = jackfile.sub(/\.jack$/, "T.xml")
+            #xmlfile = jackfile.sub(/\.jack$/, "T.xml")
             #io = File.open(xmlfile, "w")
             #io.printf("<tokens>\n")
             
-            engine = CompilationEngine.new(xmlfile)
-            engine.compileClass
+            #engine = CompilationEngine.new(xmlfile)
+            engine = CompilationEngine.new(jackfile)
+            engine.compile_class
 =begin            
             tokenizer = JackTokenizer.new(jackfile)
             while tokenizer.has_more_tokens?
