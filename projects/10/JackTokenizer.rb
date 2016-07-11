@@ -15,7 +15,7 @@ class JackTokenizer
     end
     
     def token_type
-    puts @current_token
+    puts "current token: #{@current_token}"
         case @current_token
         when /^class$|^constructor$|^function$|^method$|^field$|^static$|^var$|^int$|^char$|^boolean$|^void$|^true$|^false$|^null$|^this$|^let$|^do$|^if$|^else$|^while$|^return$/
             puts "key: #{@current_token}"
@@ -23,10 +23,9 @@ class JackTokenizer
         when /\{|\}|\(|\)|\[|\]|\.|,|;|\+|-|\*|\/|&|\||<|>|=|~/
             TokenType::SYMBOL
         when /"(.+)"/
-            p $1
-            @current_token = $1
+            #@current_token = $1
             TokenType::STRING_CONST
-        when /[a-zA-Z_][\w_]*/
+        when /^[a-zA-Z_][\w_]*$/
             TokenType::IDENTIFIER
         when /\d+/
             TokenType::INT_CONST
@@ -54,7 +53,8 @@ class JackTokenizer
     end
     
     def string_val
-        @current_token
+        @current_token =~ /"(.+)"/
+        $1
     end
     
     def peek

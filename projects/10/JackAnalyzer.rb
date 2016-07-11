@@ -1,4 +1,4 @@
-require 'cgi'
+#require 'cgi'
 require_relative 'Types'
 require_relative 'JackTokenizer'
 require_relative 'CompilationEngine'

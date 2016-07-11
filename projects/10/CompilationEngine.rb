@@ -1,3 +1,4 @@
+require 'cgi'
 require_relative 'Types'
 require_relative 'JackTokenizer'
 
@@ -5,7 +6,7 @@ class CompilationEngine
     #def initialize(xmlfile)
     def initialize(jackfile)
         @jackfile = jackfile
-        xmlfile = jackfile.sub(/\.jack$/, "T.xml")
+        xmlfile = jackfile.sub(/\.jack$/, ".xml")
         @fo = File.open(xmlfile, "w")
         
         @tokenizer = JackTokenizer.new(jackfile)
@@ -21,8 +22,13 @@ class CompilationEngine
             expect(TokenType::SYMBOL, ["{"])
         end
         
-        compile_class_var_dec
-        compile_subroutine
+        while apply?(TokenType::KEYWORD, ["static", "field"]) do
+            compile_class_var_dec
+        end
+        
+        while apply?(TokenType::KEYWORD, ["constructor", "function", "method"]) do
+            compile_subroutine
+        end
         
         if accept?(TokenType::SYMBOL, ["}"])
             if @tokenizer.has_more_tokens?
@@ -37,7 +43,7 @@ class CompilationEngine
     
     def compile_class_var_dec
         # TODO: whileを呼び出し側に移すか検討する
-        while apply?(TokenType::KEYWORD, ["static", "field"]) do
+        #while apply?(TokenType::KEYWORD, ["static", "field"]) do
             @fo.puts "<classVarDec>"
             if accept?(TokenType::KEYWORD, ["static", "field"])
                 expect_type
@@ -50,14 +56,14 @@ class CompilationEngine
                 expect(TokenType::SYMBOL, [";"])
             end
             @fo.puts "</classVarDec>"   
-        end    
+        #end    
     end
     
     # ('constructor'|'function'|'method') ('void'|type) subroutinName
     # '(' parameterList ')' subroutineBody
     def compile_subroutine
         # TODO: whileを呼び出し側に移すか検討する
-        while apply?(TokenType::KEYWORD, ["constructor", "function", "method"]) do
+        #while apply?(TokenType::KEYWORD, ["constructor", "function", "method"]) do
             @fo.puts "<subroutineDec>"
             if accept?(TokenType::KEYWORD, ["constructor", "function", "method"])
                 accept?(TokenType::KEYWORD, ["void"]) or accept_type?
@@ -69,13 +75,15 @@ class CompilationEngine
             
             @fo.puts "<subroutineBody>"
             if accept?(TokenType::SYMBOL, ["{"])
-                compile_var_dec
+                while apply?(TokenType::KEYWORD, ["var"]) do 
+                    compile_var_dec
+                end
                 compile_statements
                 expect(TokenType::SYMBOL, ["}"])
             end
             @fo.puts "</subroutineBody>"
             @fo.puts "</subroutineDec>"
-        end
+        #end
     end
     
     def compile_parameter_list
@@ -92,16 +100,20 @@ class CompilationEngine
     
     def compile_var_dec
         #TODO: whileを呼び出し側に移すか検討する
-        while apply?(TokenType::KEYWORD, ["var"]) do 
+        #while apply?(TokenType::KEYWORD, ["var"]) do 
             @fo.puts "<varDec>"
             if accept?(TokenType::KEYWORD, ["var"])
                 expect_type
                 expect(TokenType::IDENTIFIER)
-                
+                while apply?(TokenType::SYMBOL, [","]) do
+                    if accept?(TokenType::SYMBOL, [","])
+                        expect(TokenType::IDENTIFIER)
+                    end
+                end
                 expect(TokenType::SYMBOL, [";"])
             end
             @fo.puts "</varDec>"   
-        end    
+        #end    
     end
     
     def compile_statements
@@ -131,11 +143,9 @@ class CompilationEngine
         @fo.puts "<letStatement>"
         if accept?(TokenType::KEYWORD, ["let"])
             expect(TokenType::IDENTIFIER)
-            2.times do
-                if accept?(TokenType::SYMBOL, ["["])
-                    compile_expression
-                    expect(TokenType::SYMBOL, ["]"])
-                end
+            if accept?(TokenType::SYMBOL, ["["])
+                compile_expression
+                expect(TokenType::SYMBOL, ["]"])
             end
             expect(TokenType::SYMBOL, ["="])
             compile_expression
@@ -164,10 +174,6 @@ class CompilationEngine
                     compile_expression
                     expect(TokenType::SYMBOL, [";"])
                 end
-                #2.times do
-                #    compile_expression
-                #end
-                #expect(TokenType::SYMBOL, [";"])
             end
         @fo.puts "</returnStatement>"
     end
@@ -193,6 +199,11 @@ class CompilationEngine
     def compile_expression
         @fo.puts "<expression>"
         compile_term
+        while apply?(TokenType::SYMBOL, ["+", "-", "*", "/", "&", "|", "<", ">", "="]) do
+            if accept?(TokenType::SYMBOL, ["+", "-", "*", "/", "&", "|", "<", ">", "="])
+                compile_term
+            end
+        end
         @fo.puts "</expression>"
     end
     
@@ -250,16 +261,16 @@ class CompilationEngine
                 end
             when TokenType::SYMBOL
                 if token.include?(@tokenizer.symbol)
-                    @fo.puts "<symbol> #{@tokenizer.symbol} </symbol>"
+                    @fo.puts "<symbol> #{CGI.escapeHTML(@tokenizer.symbol)} </symbol>"
                 else
                     return false
                 end
             when TokenType::IDENTIFIER
                 @fo.puts "<identifier> #{@tokenizer.identifier} </identifier>"
             when TokenType::INT_CONST
-                @fo.puts "<intConst> #{@tokenizer.int_val} </intConst>"
+                @fo.puts "<integerConstant> #{@tokenizer.int_val} </integerConstant>"
             when TokenType::STRING_CONST
-                @fo.puts "<stringConst> #{@tokenizer.string_val} </stringConst>"
+                @fo.puts "<stringConstant> #{@tokenizer.string_val} </stringConstant>"
             end
             @tokenizer.advance if @tokenizer.has_more_tokens?
             true
