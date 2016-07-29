@@ -1,0 +1,3 @@
+class VMWriter
+
+end
