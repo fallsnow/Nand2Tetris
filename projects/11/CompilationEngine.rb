@@ -160,7 +160,8 @@ class CompilationEngine
         end
         # put arguments to the stack
         #@fo.puts "call #{function_name} #{@expression_num}"
-        @vmwriter.write_call(@function_name, @expression_num)    
+        @vmwriter.write_call(@function_name, @expression_num)
+        @vmwriter.write_pop(:temp, 0)    
         #@fo.puts "</doStatement>"
     end
     
@@ -198,9 +199,12 @@ class CompilationEngine
             unless accept?(TokenType::SYMBOL, [";"])
                 compile_expression
                 expect(TokenType::SYMBOL, [";"])
+            else
+                @vmwriter.write_push(:constant, 0)
             end
         end
         @fo.puts "</returnStatement>"
+        @vmwriter.write_return
     end
     
     def compile_if
@@ -226,7 +230,9 @@ class CompilationEngine
         compile_term
         while apply?(TokenType::SYMBOL, ["+", "-", "*", "/", "&", "|", "<", ">", "="]) do
             if accept?(TokenType::SYMBOL, ["+", "-", "*", "/", "&", "|", "<", ">", "="])
+                op = @tokenizer.symbol
                 compile_term
+                @vmwriter.write_arithmetic(op)
             end
         end
         #@fo.puts "</expression>"

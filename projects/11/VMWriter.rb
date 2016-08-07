@@ -8,11 +8,19 @@ class VMWriter
     end
 
     def write_pop(segment, index)
-
+        @fo.puts "pop #{segment} #{index}"
     end
 
     def write_arithmetic(command)
-
+        puts "write arith #{command}"
+        case command
+        when /\+/
+            @fo.puts "add"
+        when /\*/
+            @fo.puts "call Math.multiply 2"
+        else
+            puts "no match?"
+        end
     end
 
     def write_lable(label)
@@ -36,7 +44,7 @@ class VMWriter
     end
 
     def write_return
-
+        @fo.puts "return"
     end
 
     def close
