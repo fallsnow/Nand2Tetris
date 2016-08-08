@@ -192,7 +192,13 @@ class CompilationEngine
             compile_expression
             expect(TokenType::SYMBOL, [";"])
         end
-        @vmwriter.write_pop(:local, @symbol_table.index_of(symbol_name))
+        #@vmwriter.write_pop(:local, @symbol_table.index_of(symbol_name))
+        case @symbol_table.kind_of(symbol_name)
+        when /var/ 
+            @vmwriter.write_pop("local", @symbol_table.index_of(symbol_name))
+        when /argument/ 
+            @vmwriter.write_pop("argument", @symbol_table.index_of(symbol_name))
+        end
         #@fo.puts "</letStatement>"
     end
     
@@ -237,7 +243,7 @@ class CompilationEngine
             expect(TokenType::SYMBOL, ["("])
             compile_expression
             expect(TokenType::SYMBOL, [")"])
-            @vmwriter.write_arithmetic(UNITARY_OP["~"])
+            #@vmwriter.write_arithmetic(UNITARY_OP["~"])
             @vmwriter.write_if("IF_TRUE#{@if_num[-1]}")
             @vmwriter.write_goto("IF_FALSE#{@if_num[-1]}")
             @vmwriter.write_label("IF_TRUE#{@if_num[-1]}")
@@ -330,8 +336,9 @@ class CompilationEngine
             expect(TokenType::SYMBOL, [")"])
         # unaryOp term
         elsif accept?(TokenType::SYMBOL, ["-", "~"])
+            symbol = @tokenizer.symbol
             compile_term
-            @vmwriter.write_arithmetic(UNITARY_OP[@tokenizer.symbol])
+            @vmwriter.write_arithmetic(UNITARY_OP[symbol])
         end
         #@fo.puts "</term>"
     end
