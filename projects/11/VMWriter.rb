@@ -12,27 +12,19 @@ class VMWriter
     end
 
     def write_arithmetic(command)
-        puts "write arith #{command}"
-        case command
-        when /\+/
-            @fo.puts "add"
-        when /\*/
-            @fo.puts "call Math.multiply 2"
-        else
-            puts "no match?"
-        end
+        @fo.puts command
     end
 
-    def write_lable(label)
-
+    def write_label(label)
+        @fo.puts "label #{label}"
     end
 
     def write_goto(label)
-
+        @fo.puts "goto #{label}"
     end
     
     def write_if(label)
-
+        @fo.puts "if-goto #{label}"
     end
 
     def write_call(function_name, argument_num)
@@ -49,5 +41,11 @@ class VMWriter
 
     def close
         @fo.close
+    end
+
+    # original
+
+    def write_comment(string)
+        @fo.puts string
     end
 end

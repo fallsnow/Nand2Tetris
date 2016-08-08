@@ -66,6 +66,13 @@ class JackTokenizer
         @string_val =~ /"(.+)"/
         $1
     end
+
+    # original
+
+    def current_token
+        @current_token
+    end
+    
 =begin    
     def peek
         @tokens[0]

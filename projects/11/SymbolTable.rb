@@ -49,20 +49,20 @@ class SymbolTable
     end
 
     def var_count(kind)
-        eval("#{kind}_count")    
+        eval("@#{kind}_count")    
     end
 
     def kind_of(symbol_name)
         if @subroutine_table.has_key?(symbol_name)
             value = @subroutine_table.fetch(symbol_name)
-            puts "value = #{value}"
+            puts "#{symbol_name}'s value = #{value}"
             kind = value[1]
         elsif @class_table.has_key?(symbol_name)
             value = @class_table.fetch(symbol_name)
-            puts "value = #{value}"
+            puts "#{symbol_name}'s value = #{value}"
             kind = value[1]
         else
-            kind = "none"
+            kind = :none
         end
         puts "retun kind: #{kind}"
         return kind
