@@ -64,7 +64,7 @@ class SymbolTable
         else
             kind = :none
         end
-        puts "retun kind: #{kind}"
+        #Sputs "retun kind: #{kind}"
         return kind
     end
 
