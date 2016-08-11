@@ -26,7 +26,7 @@ class JackTokenizer
             #puts "key: #{@current_token}"
             @keyword = @current_token
             TokenType::KEYWORD
-        when /\{|\}|\(|\)|\[|\]|\.|,|;|\+|-|\*|\/|&|\||<|>|=|~/
+        when /^\{|^\}|^\(|^\)|^\[|^\]|^\.|^,|^;|^\+|^-|^\*|^\/|^&|^\||^<|^>|^=|^~/
             @symbol = @current_token
             TokenType::SYMBOL
         when /"(.+)"/

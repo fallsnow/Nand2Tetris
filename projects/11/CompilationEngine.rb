@@ -97,9 +97,16 @@ class CompilationEngine
 
         #@fo.puts "<subroutineDec>"
         if accept?(TokenType::KEYWORD, ["constructor", "function", "method"])
-            is_constructor = @tokenizer.keyword == "constructor"
-            is_method = @tokenizer.keyword == "method"
             @kind = "subroutine"
+            is_constructor = @tokenizer.keyword == "constructor"
+            if @tokenizer.keyword == "method"
+                # インスタンスへの参照thisを隠れ引数として第1引数に設定する
+                @symbol_table.define(:this, :hidden_argument, :argument)
+                is_method = true
+            else
+                is_method = false
+            end
+
             accept?(TokenType::KEYWORD, ["void"]) or accept_type?
             expect(TokenType::IDENTIFIER)
             @function_name = "#{@class_name}.#{@tokenizer.identifier}"
@@ -115,16 +122,14 @@ class CompilationEngine
             end
             #@vmwriter.write_function(@function_name, @local_num)
             @vmwriter.write_function(@function_name, @symbol_table.var_count("var"))
-            # ↓ argument_countが0出ないときに限定すべき？
-            @vmwriter.write_push(:constant, @symbol_table.var_count("argument")) unless @symbol_table.var_count("argument") == 0
+            # ↓ argument_countが0でないときに限定すべき？
+            #@vmwriter.write_push(:constant, @symbol_table.var_count("argument")) unless @symbol_table.var_count("argument") == 0
             if is_constructor
                 @vmwriter.write_push(:constant, @symbol_table.var_count(:field))
                 @vmwriter.write_call("Memory.alloc", 1)
                 @vmwriter.write_pop(:pointer, 0)
-            end
-            if is_method
-                # 隠れ引数をthisに設定する
-                @vmwriter.write_push(:argument, 0)
+            elsif is_method
+                @vmwriter.write_push(:argument, @symbol_table.index_of(:this))
                 @vmwriter.write_pop(:pointer, 0)
             end
             @purpose = :use
@@ -181,44 +186,39 @@ class CompilationEngine
     
     def compile_do
         #@fo.puts "<doStatement>"
+        hidden_argument = 0
         if accept?(TokenType::KEYWORD, ["do"])
             expect(TokenType::IDENTIFIER)
             if accept?(TokenType::SYMBOL, ["."])
                 object = @tokenizer.identifier   
                 expect(TokenType::IDENTIFIER)
-                subroutine = @tokenizer.identifier
+                #subroutine = @tokenizer.identifier
             else
                 object = @class_name
-                subroutine = @tokenizer.identifier
+            @vmwriter.write_push(:pointer, 0)
+                #subroutine = @tokenizer.identifier
             end
+
+            subroutine = @tokenizer.identifier
+            # push the hidden argument to the stack
+            if @symbol_table.kind_of(object) != :none
+                @vmwriter.write_push(SEGMENT[@symbol_table.kind_of(object)], @symbol_table.index_of(object))
+                hidden_argument = 1 
+            end
+
             expect(TokenType::SYMBOL, ["("])
             compile_expression_list
             expect(TokenType::SYMBOL, [")"])
             expect(TokenType::SYMBOL, [";"])
         end
         
-        # put arguments to the stack
-        if @symbol_table.kind_of(object) != :none
-            @expression_num += 1 
-            case @symbol_table.kind_of(object)
-            when /static/
-                @vmwriter.write_push("static", @symbol_table.index_of(object))
-            when /field/
-                @vmwriter.write_push("this", @symbol_table.index_of(object))
-            when /argument/ 
-                @vmwriter.write_push("argument", @symbol_table.index_of(object))
-            when /var/ 
-                @vmwriter.write_push("local", @symbol_table.index_of(object))
-            end
-        end
-
         if object == @class_name
-            @vmwriter.write_push(:pointer, 0)
-            @expression_num += 1
+            #@vmwriter.write_push(:pointer, 0)
+            hidden_argument = 1
         elsif @symbol_table.type_of(object) != nil
             object = @symbol_table.type_of(object)
         end
-        @vmwriter.write_call("#{object}.#{subroutine}", @expression_num)
+        @vmwriter.write_call("#{object}.#{subroutine}", @expression_num + hidden_argument)
         @vmwriter.write_pop(:temp, 0)    
         #@fo.puts "</doStatement>"
     end
@@ -349,6 +349,7 @@ class CompilationEngine
             @vmwriter.write_push(:constant, @tokenizer.int_val)
         elsif accept?(TokenType::STRING_CONST)
             string = @tokenizer.string_val
+            puts "\"#{string}\""
             @vmwriter.write_push(:constant, string.length)
             @vmwriter.write_call("String.new", 1)
             string.split("").each {|c|
@@ -370,7 +371,7 @@ class CompilationEngine
             if apply?(TokenType::SYMBOL, ["[", "."])
                 symbol_name = @tokenizer.identifier
             else
-                @vmwriter.write_push(SEGMENT[@symbol_table.kind_of(@tokenizer.identifier)], @symbol_table.index_of(@tokenizer.identifier))
+                @vmwriter.write_push(SEGMENT["#{@symbol_table.kind_of(@tokenizer.identifier)}"], @symbol_table.index_of(@tokenizer.identifier))
             end
 
             # varName [ expression ]
@@ -387,12 +388,19 @@ class CompilationEngine
                 expect(TokenType::SYMBOL, [")"])
             # (className | varName) . subroutineName ( eprexxionList )
             elsif accept?(TokenType::SYMBOL, ["."])
+                hidden_argument = 0
+                if @symbol_table.type_of(symbol_name) != nil
+                    @vmwriter.write_push(SEGMENT[@symbol_table.kind_of(symbol_name)], @symbol_table.index_of(symbol_name))
+                    hidden_argument = 1
+                    symbol_name = @symbol_table.type_of(symbol_name)
+                end
+
                 expect(TokenType::IDENTIFIER)
                 symbol_name += ".#{@tokenizer.identifier}"
                 accept?(TokenType::SYMBOL, ["("])
                 compile_expression_list
                 expect(TokenType::SYMBOL, [")"])
-                @vmwriter.write_call(symbol_name, @expression_num)
+                @vmwriter.write_call(symbol_name, @expression_num + hidden_argument)
             end
         # ( expression )
         elsif accept?(TokenType::SYMBOL, ["("])
