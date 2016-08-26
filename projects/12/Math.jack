@@ -7,32 +7,151 @@
  * A basic math library.
  */
 class Math {
+	
+	static Array twoToThe;
 
     /** Initializes the library. */
     function void init() {
+		var int i;
+		
+		let twoToThe = Array.new(16);
+		let twoToThe[0] = 1;
+
+		let i = 1;
+		while(i < 16) {
+			let twoToThe[i] = twoToThe[i-1] + twoToThe[i-1];
+			let i = i + 1;
+		}
+		
+		return;
     }
 
     /** Returns the absolute value of x. */
     function int abs(int x) {
+		if(x < 0) {
+			return -x;
+		} else {
+			return x;
+		}
     }
 
     /** Returns the product of x and y. */
     function int multiply(int x, int y) {
+		var int sum, j, shiftedX;
+		
+		if((x = 0) | (y = 0)) {
+			return 0;
+		}
+		
+		let sum = 0;
+		let shiftedX = x;
+		
+		let j = 0;
+		while(j < 16) {
+			if(Math.bit(y, j) = true) {
+				let sum = sum + shiftedX;
+			}
+			let shiftedX = shiftedX + shiftedX;
+			let j = j + 1;
+		}
+		return sum;
     }
 
     /** Returns the integer part of x/y. */
     function int divide(int x, int y) {
+		var int q, ret_val;
+		var boolean sign_x, sign_y;
+		
+		// 符号ビットを保存
+		let sign_x = Math.bit(x, 15);
+		let sign_y = Math.bit(y, 15);
+		
+		// 除算処理は正の整数として計算する
+		let x = Math.abs(x);
+		let y = Math.abs(y);
+		
+		/** 戻り値をエラーコードへ変更する */
+		if((x < 0) | (y < 1)) {
+			return 0;
+		}
+		
+		let ret_val = Math.divide_recursive(x, y);
+		
+		/** 計算結果の符号を復元する */
+		if((sign_x | ~sign_y) & (~sign_x | sign_y)) {
+			return ret_val;
+		} else {
+			return -ret_val;
+		}
     }
+    
+    function int divide_recursive(int x, int y) {
+		var int q;
+		
+		if(x < y) {
+			return 0;
+		}
+		
+		let q = Math.divide_recursive(x, y + y);
+		if((x - (2 * q * y)) < y) {
+			return q + q;
+		} else {
+			return q + q + 1;
+		}
+	}
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
+		var int exp;
+		var int j, y, z;
+		
+		let exp = 128;
+		let y = 0;
+		
+		let j = 7;
+		while(-1 < j) {
+			let z = (y + exp) * (y + exp);
+			
+			if(Math.bit(z, 15)) {
+				/** オーバーフローあり */
+				if(z > -x) {
+					// do nothing
+				} else {
+					let y = y + exp;
+				}
+			} else {
+				/** オーバーフローなし */
+				if(z > x) {
+					// do nothing
+				} else {
+					let y = y + exp;
+				}
+			}
+			let exp = exp / 2;
+			let j = j - 1;
+		}
+		return y;
     }
 
     /** Returns the greater number. */
     function int max(int a, int b) {
+		if(b < a) {
+			return a;
+		} else {
+			return b;
+		}
     }
 
     /** Returns the smaller number. */
     function int min(int a, int b) {
+		if(a < b) {
+			return a;
+		} else {
+			return b;
+		}
     }
+    
+    function boolean bit(int x, int j) {
+		return (x & twoToThe[j]) = twoToThe[j];
+	}
 }

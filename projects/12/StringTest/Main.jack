@@ -11,6 +11,12 @@ class Main {
         var String s;
         var String i;
         
+        // Math.divide Test
+        var int i;
+        let i = 32767 / 10;
+        do Output.printInt(i);
+        do Output.println();
+/*        
         let s = String.new(0); // A zero-capacity string should be supported
         do s.dispose();
 
@@ -77,7 +83,7 @@ class Main {
         
         do i.dispose();
         do s.dispose();
-
+*/
         return;
     }
 
