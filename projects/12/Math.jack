@@ -75,7 +75,7 @@ class Math {
 			return 0;
 		}
 		
-		let ret_val = Math.divide_recursive(x, y);
+		let ret_val = Math.divide_recursive(x, y, 1);
 		
 		/** ŒvZŒ‹‰Ê‚Ì•„†‚ğ•œŒ³‚·‚é */
 		if((sign_x | ~sign_y) & (~sign_x | sign_y)) {
@@ -85,14 +85,14 @@ class Math {
 		}
     }
     
-    function int divide_recursive(int x, int y) {
+    function int divide_recursive(int x, int y, int debug) {
 		var int q;
-		
-		if(x < y) {
+	
+		if((x < y) | (y < 0)) {
 			return 0;
 		}
 		
-		let q = Math.divide_recursive(x, y + y);
+		let q = Math.divide_recursive(x, y + y, debug + 1);
 		if((x - (2 * q * y)) < y) {
 			return q + q;
 		} else {
@@ -153,5 +153,16 @@ class Math {
     
     function boolean bit(int x, int j) {
 		return (x & twoToThe[j]) = twoToThe[j];
+	}
+	
+	function int mod(int x, int y) {
+		var int q;
+		
+		if(x < y) {
+			return x;
+		}
+		
+		let q = Math.divide(x, y);
+		return x - Math.multiply(q, y);
 	}
 }

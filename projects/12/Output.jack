@@ -14,9 +14,25 @@ class Output {
 
     // Character map for printing on the left of a screen word
     static Array charMaps; 
+    
+    // Cursor cordinate
+    static int cursor_row; // 0..22
+    static int cursor_col; // 0..63
+    
+    // Memory mapped I/O for the screen
+    static Array screen;
 
     /** Initializes the screen and locates the cursor at the screen's top-left. */
     function void init() {
+		do Screen.clearScreen();
+		let cursor_row = 0;
+		let cursor_col = 0;
+		
+		do Output.initMap();
+		
+		let screen = 16384;
+		
+		return;
     }
 
     // Initalizes the character map array
@@ -65,7 +81,7 @@ class Output {
         do Output.create(64,30,51,51,59,59,59,27,3,30,0,0);  // @
         do Output.create(63,30,51,51,24,12,12,0,12,12,0,0);  // ?
 
-        do Output.create(65,0,0,0,0,0,0,0,0,0,0,0);          // A ** TO BE FILLED **
+        do Output.create(65,12,30,51,51,63,51,51,51,51,0,0); // A
         do Output.create(66,31,51,51,51,31,51,51,51,31,0,0); // B
         do Output.create(67,28,54,35,3,3,3,35,54,28,0,0);    // C
         do Output.create(68,15,27,51,51,51,51,51,27,15,0,0); // D
@@ -137,9 +153,9 @@ class Output {
     // Creates a character map array of the given char index with the given values.
     function void create(int index, int a, int b, int c, int d, int e,
 		         int f, int g, int h, int i, int j, int k) {
-	var Array map;
+		var Array map;
 
-	let map = Array.new(11);
+		let map = Array.new(11);
         let charMaps[index] = map;
 
         let map[0] = a;
@@ -171,28 +187,179 @@ class Output {
     /** Moves the cursor to the j’th column of the i’th row,
      *  and erases the character that was there. */
     function void moveCursor(int i, int j) {
+		let cursor_row = i;
+		let cursor_col = j;
+		return;
     }
 
     /** Prints c at the cursor location and advances the cursor one
      *  column forward. */
     function void printChar(char c) {
+		var Array map;
+		var int address;
+		var int offset;
+		
+		//let map = charMaps[c];
+		let map = Output.getMap(c);
+		
+	/*	
+		if((cursor_col & 1) = 0) {
+			let offset = 1;
+		} else {
+			let offset = 256;
+		}
+		
+		let address = (cursor_row * 352) + (cursor_col/2);
+	
+		let screen[address + 0]   = screen[address + 0] + (map[0]   * offset);
+		let screen[address + 32]  = screen[address + 32] + (map[1]  * offset);
+		let screen[address + 64]  = screen[address + 64] + (map[2]  * offset);
+		let screen[address + 96]  = screen[address + 96] + (map[3]  * offset);
+		let screen[address + 128] = screen[address + 128] + (map[4] * offset);
+		let screen[address + 160] = screen[address + 160] + (map[5] * offset);
+		let screen[address + 192] = screen[address + 192] + (map[6] * offset);
+		let screen[address + 224] = screen[address + 224] + (map[7] * offset);
+		let screen[address + 256] = screen[address + 256] + (map[8] * offset);
+		let screen[address + 288] = screen[address + 288] + (map[9] * offset);
+		let screen[address + 320] = screen[address + 320] + (map[10] * offset);
+	*/
+		let address = (cursor_row * 352) + (cursor_col/2);
+		
+		if((cursor_col & 1) = 0) {
+			/** cursor_col is even */
+			let screen[address + 0]   = map[0];
+			let screen[address + 32]  = map[1];
+			let screen[address + 64]  = map[2];
+			let screen[address + 96]  = map[3];
+			let screen[address + 128] = map[4];
+			let screen[address + 160] = map[5];
+			let screen[address + 192] = map[6];
+			let screen[address + 224] = map[7];
+			let screen[address + 256] = map[8];
+			let screen[address + 288] = map[9];
+			let screen[address + 320] = map[10];
+		} else {
+			/** cursor_col is odd */
+			let screen[address + 0]   = screen[address + 0]   + (map[0] * 256);
+			let screen[address + 32]  = screen[address + 32]  + (map[1] * 256);
+			let screen[address + 64]  = screen[address + 64]  + (map[2] * 256);
+			let screen[address + 96]  = screen[address + 96]  + (map[3] * 256);
+			let screen[address + 128] = screen[address + 128] + (map[4] * 256);
+			let screen[address + 160] = screen[address + 160] + (map[5] * 256);
+			let screen[address + 192] = screen[address + 192] + (map[6] * 256);
+			let screen[address + 224] = screen[address + 224] + (map[7] * 256);
+			let screen[address + 256] = screen[address + 256] + (map[8] * 256);
+			let screen[address + 288] = screen[address + 288] + (map[9] * 256);
+			let screen[address + 320] = screen[address + 320] + (map[10] * 256);
+		}
+		
+		/** Advance the cursor */
+		do Output.advanceCursor();
+		
+		return;
     }
 
     /** Prints s starting at the cursor location, and advances the
      *  cursor appropriately. */
     function void printString(String s) {
+		var int i;
+		
+		let i = 0;
+		while(i < s.length()) {
+			do Output.printChar(s.charAt(i));
+			//do Output.advanceCursor();
+			let i = i + 1;
+		}
+		
+		return;
     }
 
     /** Prints i starting at the cursor location, and advances the
      *  cursor appropriately. */
     function void printInt(int i) {
+		var String s;
+		
+		let s = String.new(6); // -32768 is the longest integer represented by 16-bit singed int
+		do s.setInt(i);
+		do Output.printString(s);
+		
+		return;
     }
 
     /** Advances the cursor to the beginning of the next line. */
     function void println() {
+		let cursor_col = 0;
+		if(cursor_row < 22) {
+			let cursor_row = cursor_row + 1;
+		} else {
+			let cursor_row = 0;
+		}
+		
+		return;
     }
 
     /** Moves the cursor one column back. */
     function void backSpace() {
+		var int address;
+		
+		//let cursor_col = cursor_col - 1;
+		do Output.disadvanceCursor();
+		let address = (cursor_row * 352) + (cursor_col/2);
+		
+		if((cursor_col & 1) = 0) {
+			/** cursor_col is even */
+			let screen[address + 0]   = screen[address + 0]   & -256;
+			let screen[address + 32]  = screen[address + 32]  & -256;
+			let screen[address + 64]  = screen[address + 64]  & -256;
+			let screen[address + 96]  = screen[address + 96]  & -256;
+			let screen[address + 128] = screen[address + 128] & -256;
+			let screen[address + 160] = screen[address + 160] & -256;
+			let screen[address + 192] = screen[address + 192] & -256;
+			let screen[address + 224] = screen[address + 224] & -256;
+			let screen[address + 256] = screen[address + 256] & -256;
+			let screen[address + 288] = screen[address + 288] & -256;
+			let screen[address + 320] = screen[address + 320] & -256;
+		} else {
+			/** cursor_col is odd */
+			let screen[address + 0]   = screen[address + 0]   & 255;
+			let screen[address + 32]  = screen[address + 32]  & 255;
+			let screen[address + 64]  = screen[address + 64]  & 255;
+			let screen[address + 96]  = screen[address + 96]  & 255;
+			let screen[address + 128] = screen[address + 128] & 255;
+			let screen[address + 160] = screen[address + 160] & 255;
+			let screen[address + 192] = screen[address + 192] & 255;
+			let screen[address + 224] = screen[address + 224] & 255;
+			let screen[address + 256] = screen[address + 256] & 255;
+			let screen[address + 288] = screen[address + 288] & 255;
+			let screen[address + 320] = screen[address + 320] & 255;
+		}
+		
+		return;
     }
+    
+    function void advanceCursor() {
+		if(cursor_col < 63) {
+			let cursor_col = cursor_col + 1;
+		} else {
+			let cursor_col = 0;
+			if(cursor_row < 22) {
+				let cursor_row = cursor_row + 1;
+			} else {
+				let cursor_row = 0;
+			}
+		}
+		return;
+	}
+	
+	function void disadvanceCursor() {
+		if(cursor_col = 0) {
+			if(0 < cursor_row) {
+				let cursor_row = cursor_row - 1;
+			}
+		} else {
+			let cursor_col = cursor_col - 1;
+		}
+		
+		return;
+	}
 }
