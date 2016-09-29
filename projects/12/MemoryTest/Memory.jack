@@ -1,0 +1,77 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/12/Memory.jack
+
+/**
+ * Memory operations library.
+ */ 
+class Memory {
+	
+	static int free_list;
+
+    /** Initializes memory parameters. */
+    function void init() {
+		/** set free to point to the head of the heap */
+		let free_list = 2048;
+		/** set free_list.length = heap size (16383 - (2048 - 1) - 2) */
+		let free_list[0] = 14334;
+		/** set free_list.next = null */
+		let free_list[1] = 0;
+		
+		return;
+    }
+
+    /** Returns the value of the main memory at the given address. */
+    function int peek(int address) {
+		return address[0];
+    }
+
+    /** Sets the value of the main memory at this address
+     *  to the given value. */
+    function void poke(int address, int value) {
+    	let address[0] = value;
+    	return;
+    }
+
+    /** finds and allocates from the heap a memory block of the 
+     *  specified size and returns a reference to its base address. */
+    function int alloc(int size) {
+    	var int node;
+    	var int free;
+    	
+    	let node = free_list;
+    	while(true) {
+			/** the node is not large enough */
+			if(node[0] < size) {
+				/** the list has more nodes */
+				if(0 < node[1]) {
+					let node = node[1];
+				/** the current node is the last node */
+				} else {
+					return 0;
+				}
+			/** the node is large enough */
+			} else {
+				let free = node + node[0] - (size + 1);
+				let free[-1] = size;
+				let node[0] = node[0] - (size + 1);
+				return free;
+			}
+		}
+		
+    	return 0;
+    }
+
+    /** De-allocates the given object and frees its space. */
+    function void deAlloc(int object) {
+		var int next_node;
+		
+		let next_node = free_list[1];
+		let free_list[1] = object -1;
+		let object[-1] = object[-1] - 1;
+		let object[0] = next_node;
+		
+    	return;
+    }
+}
