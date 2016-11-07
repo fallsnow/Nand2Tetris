@@ -8,33 +8,192 @@
  */
 class Screen {
 
+    /** Memory mapped I/O for the screen */
+    static Array screen;	/** Memory address of the first left top pixel */
+    static bool color;		/** white = false, black = true */
+    
+    /** Bit Table */
+    static Array bitTable;
+
     /** Initializes the Screen. */
     function void init() {
+		let screen = 16384;
+		let color = true;
+		
+		let bitTable = Array.new(16);
+		let bitTable[0]  =      1;
+		let bitTable[1]  =      2;
+		let bitTable[2]  =      4;
+		let bitTable[3]  =      8;
+		let bitTable[4]  =     16;
+		let bitTable[5]  =     32;
+		let bitTable[6]  =     64;
+		let bitTable[7]  =    128;
+		let bitTable[8]  =    256;
+		let bitTable[9]  =    512;
+		let bitTable[10] =   1024;
+		let bitTable[11] =   2048;
+		let bitTable[12] =   4096;
+		let bitTable[13] =   8192;
+		let bitTable[14] =  16384;
+		let bitTable[15] = ~32767; /** -32768 */
+		
+		return;
     }
 
     /** Erases the whole screen. */
     function void clearScreen() {
+		var int offset;
+		
+		let offset = 8192;	/** 512 x 256 pixel / 16 */
+
+		while(0 < offset) {
+			let screen[0] = 0;
+			let screen = screen + 1;
+			let offset = offset - 1;
+		}
+		
+		return;
     }
 
     /** Sets the color to be used in further draw commands
      *  where white = false, black = true. */
     function void setColor(boolean b) {
+		let color = b;
+		return;
     }
 
     /** Draws the (x, y) pixel. */
     function void drawPixel(int x, int y) {
+		if(color = true) {
+			let screen[(y * 32) + (x / 16)] = screen[(y * 32) + (x / 16)] | Screen.getBit(Math.mod(x, 16));
+		} else {
+			let screen[(y * 32) + (x / 16)] = screen[(y * 32) + (x / 16)] & ~Screen.getBit(Math.mod(x, 16));
+		}
+		//let screen[(y * 32) + (x / 16)] = 1;
+		return;
     }
 
     /** Draws a line from (x1, y1) to (x2, y2). */
     function void drawLine(int x1, int y1, int x2, int y2) {
+		var int x;
+		var int y;
+		var int dx;
+		var int dy;
+		var int a;
+		var int b;
+		var int adyMinusbdx;
+		var int bdxMinusady;
+		
+		/** Parameter Check */
+		if((x1 < 0) | (511 < x1) | (x2 < 0) | (511 < x2)| (y1 < 0) | (255 < y1) | (y2 < 0) | (255 < y2)) {
+			do Sys.error(8);
+		}
+		
+		/** Chose starting points (x, y) and gradient (dx, dy) */
+		if(x1 < x2) {
+			let x = x1;
+			let y = y1;
+			let dx = x2 - x1;
+			let dy = y2 - y1;
+		} else {
+			let x = x2;
+			let y = y2;
+			let dx = x1 - x2;
+			let dy = y1 - y2;
+		}
+		
+		/** Draw a horizontal line */
+		if(dy = 0) {
+			while(0 < dx) {
+				do Screen.drawPixel(x + dx, y1);
+				let dx = dx - 1;
+			}
+			return;
+		}
+		
+		/** Draw a vertical line */
+		if(dx = 0) {
+			if(0 < dy) {
+				while(0 < dy) {
+					do Screen.drawPixel(x1, y2 + dy);
+					let dy = dy - 1;
+				}
+			} else {
+				while(dy < 0) {
+					do Screen.drawPixel(x1, y1 - dy);
+					let dy = dy + 1;
+				}
+			}
+			return;
+		}
+		
+		/** Draw line */
+		let a = 0;
+		let b = 0;
+		let adyMinusbdx = 0;
+		let bdxMinusady = 0;
+
+		if(0 < dy) {
+			while(((a - 1) < dx) & ((b - 1) < dy)) {
+				do Screen.drawPixel(x + a, y + b);
+				
+				if(adyMinusbdx < 0) {
+					let a = a + 1;
+					let adyMinusbdx = adyMinusbdx + dy;
+				} else {
+					let b = b + 1;
+					let adyMinusbdx = adyMinusbdx - dx;
+				}
+			}
+		} else {
+			while(((a - 1) < dx) & (dy < (b - 1))) {
+				do Screen.drawPixel(x + a, y + b);
+				
+				if(bdxMinusady < 0) {
+					let a = a + 1;
+					let bdxMinusady = bdxMinusady - dy;
+				} else {
+					let b = b - 1;
+					let bdxMinusady = bdxMinusady - dx;
+				}
+			}
+		}
+		return;
     }
 
     /** Draws a filled rectangle where the top left corner
      *  is (x1, y1) and the bottom right corner is (x2, y2). */
     function void drawRectangle(int x1, int y1, int x2, int y2) {
+		var int row;
+
+		if(y2 < y1) {
+			do System.error(9);
+		}
+
+		let row = y2;
+		while(y1 < row) {
+			do Screen.drawLine(x1, row, x2, row);
+			let row = row - 1;
+		}
+
+		return;
     }
 
     /** Draws a filled circle of radius r around (cx, cy). */
     function void drawCircle(int cx, int cy, int r) {
+		var int dy;
+
+		let dy = -r;
+		while((dy - 1) < r) {
+			do Screen.drawLine(cx - Math.sqrt((r * r) - (dy * dy)), cy + dy, cx + Math.sqrt((r * r) - (dy * dy)), cy + dy);
+			let dy = dy + 1;
+		} 
+		return;
     }
+    
+    /** */
+    function int getBit(int d) {
+		return bitTable[d];
+	}
 }

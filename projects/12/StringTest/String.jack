@@ -25,7 +25,7 @@ class String {
 		let length_ = 0;
 		let max_length_ = 0;
 		if(0 < max_length_) {
-			do Array.despose(string);
+			do Array.dispose(string);
 		}
 		return;
     }

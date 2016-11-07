@@ -10,17 +10,64 @@ class Sys {
 
     /** Performs all the initializations required by the OS. */
     function void init() {
+		//do Array.init();
+		do Keyboard.init();
+		do Math.init();
+		do Memory.init();
+		do Output.init();
+		do Screen.init();
+		//do String.init();
+		
+		do Main.main();
+		do Sys.halt();
+		
+		return;
     }
 
     /** Halts execution. */
     function void halt() {
+		while(true) {
+		}
+		
+		return;
     }
 
     /** Waits approximately duration milliseconds and then returns. */
     function void wait(int duration) {
+    	var int i;
+    	
+    	let i = ~32767; /** ~32767 = -327678 this parameter needs to be adjusted by trial and error */
+    	while(i < 32767) {
+			let i = i + 1;
+		}
+		
+    	return;
     }
 
     /** Prints the given error code in the form "ERR<errorCode>", and halts. */
     function void error(int errorCode) {
+		if(errorCode =  1) { do Output.printString("Sys.wait"); }
+		if(errorCode =  2) { do Output.printString("Array.new"); }
+		if(errorCode =  3) { do Output.printString("Math.divide"); }
+		if(errorCode =  4) { do Output.printString("Math.sqrt"); }
+		if(errorCode =  5) { do Output.printString("Memory.alloc(5)"); }
+		if(errorCode =  6) { do Output.printString("Memory.alloc(6)"); }
+		if(errorCode =  7) { do Output.printString("Screen.drawPixel"); }
+		if(errorCode =  8) { do Output.printString("Screen.drawLine"); }
+		
+		
+		if(errorCode = 12) { do Output.printString("Screen.drawCircle(12)"); }
+		if(errorCode = 13) { do Output.printString("Screen.drawCircle(13)"); }
+		if(errorCode = 14) { do Output.printString("String.new"); }
+		if(errorCode = 15) { do Output.printString("String.charAt"); }
+		if(errorCode = 16) { do Output.printString("String.setCharAt"); }
+		if(errorCode = 17) { do Output.printString("String.appendChar"); }
+		if(errorCode = 18) { do Output.printString("String.eraseLastChar"); }
+		if(errorCode = 19) { do Output.printString("String.setInt"); }
+		if(errorCode = 20) { do Output.printString("Output.moveCursor"); }
+		
+		do Sys.halt();
+		
+		return;
     }
 }
